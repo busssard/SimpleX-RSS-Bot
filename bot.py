@@ -387,10 +387,61 @@ WELCOME_TEXT = (
 )
 
 
+# --- Rate limiter ---
+
+class RateLimiter:
+    def __init__(self, max_per_minute: int = 10, warn_threshold: int = 100):
+        self._timestamps: dict[str, list[float]] = {}  # chat_key -> list of timestamps
+        self._counts: dict[str, int] = {}  # chat_key -> total requests in current window
+        self._warned: set[str] = set()
+        self.max_per_minute = max_per_minute
+        self.warn_threshold = warn_threshold
+
+    def _key(self, target: ChatTarget) -> str:
+        return f"{target.chat_type}:{target.chat_id}"
+
+    async def check(self, target: ChatTarget) -> bool:
+        """Returns True if request is allowed, False if rate limited."""
+        key = self._key(target)
+        now = time.time()
+
+        if key not in self._timestamps:
+            self._timestamps[key] = []
+            self._counts[key] = 0
+
+        # Prune timestamps older than 1 minute
+        self._timestamps[key] = [t for t in self._timestamps[key] if now - t < 60]
+        self._timestamps[key].append(now)
+        self._counts[key] += 1
+
+        # Warn at threshold
+        if self._counts[key] == self.warn_threshold and key not in self._warned:
+            self._warned.add(key)
+            await bot.send_to(
+                "Hey! This bot is run for free. "
+                "Please be respectful with the number of requests. "
+                "Excessive use will get you rate limited.",
+                target
+            )
+
+        # Only enforce rate limit after warning
+        if key in self._warned and len(self._timestamps[key]) > self.max_per_minute:
+            return False
+
+        return True
+
+
+rate_limiter = RateLimiter()
+
+
 # --- Command handlers (work for both direct and group) ---
 
 async def handle_command(text: str, target: ChatTarget):
     text = text.strip()
+
+    if not await rate_limiter.check(target):
+        return
+
     if text.startswith("/help"):
         await bot.send_to(WELCOME_TEXT, target)
     elif text.startswith("/sub "):

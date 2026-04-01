@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+rss.db
+.env
+.claude/
+.agents/
+CLAUDE.md
+.python-version
+bash_scratchpad.sh

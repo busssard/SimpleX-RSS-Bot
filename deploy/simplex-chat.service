@@ -1,0 +1,12 @@
+[Unit]
+Description=SimpleX Chat CLI (websocket mode)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/simplex-chat -p 5225
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

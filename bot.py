@@ -382,7 +382,8 @@ WELCOME_TEXT = (
     "  Show all active subscriptions.\n\n"
     "/help\n"
     "  Show this message again.\n\n"
-    "Feeds are checked every 5 minutes. New posts are sent as they appear."
+    "Feeds are checked every 5 minutes. New posts are sent as they appear.\n\n"
+    "Report issues: https://github.com/busssard/SimpleX-RSS-Bot"
 )
 
 
